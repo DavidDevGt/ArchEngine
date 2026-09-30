@@ -1,0 +1,26 @@
+name: Film (Episodio 01)
+
+# El film completo (~7-12 min) no corre en cada PR: se lanza a mano o de forma nocturna.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+
+jobs:
+  film:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install .
+      - run: archengine doctor
+      - run: archengine film ep01 -o out/ep01.mp4 --strict
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ep01
+          path: |
+            out/ep01.mp4
+            out/ep01.mp4.manifest.json

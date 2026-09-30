@@ -1,0 +1,109 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "archengine"
+version = "0.1.0"
+description = "Architecture-as-Code explainer: deterministic simulation + Skia rendering + FFmpeg."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+# NFR-07: solo 3 dependencias de runtime (+ FFmpeg externo).
+dependencies = [
+    "skia-python",
+    "numpy",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-benchmark",
+    "hypothesis",
+    "mypy",
+    "ruff",
+    "import-linter",
+    "types-PyYAML",
+]
+
+[project.scripts]
+archengine = "archengine.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/archengine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: requiere FFmpeg real",
+    "golden: compara contra hashes/PNG de referencia",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# El signo "×" es texto de UI en espanol (la fuente del render lo incluye)
+"src/archengine/scenes/ep03_message_queue.py" = ["RUF001"]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["src"]
+
+# Regla de dependencias de docs/01-architecture-overview.md §3
+[tool.importlinter]
+root_package = "archengine"
+
+[[tool.importlinter.contracts]]
+name = "Simulation no depende de render/audio/geometry/scenes/pipeline"
+type = "forbidden"
+source_modules = ["archengine.simulation"]
+forbidden_modules = [
+    "archengine.render",
+    "archengine.audio",
+    "archengine.geometry",
+    "archengine.scenes",
+    "archengine.pipeline",
+    "archengine.cli",
+]
+
+[[tool.importlinter.contracts]]
+name = "Render no depende de simulation"
+type = "forbidden"
+source_modules = ["archengine.render"]
+forbidden_modules = ["archengine.simulation", "archengine.scenes", "archengine.cli"]
+
+[[tool.importlinter.contracts]]
+name = "Core no depende de nada interno"
+type = "forbidden"
+source_modules = ["archengine.core"]
+forbidden_modules = [
+    "archengine.simulation",
+    "archengine.render",
+    "archengine.audio",
+    "archengine.geometry",
+    "archengine.pipeline",
+    "archengine.scenes",
+    "archengine.cli",
+]
+
+[[tool.importlinter.contracts]]
+name = "Nadie importa scenes ni cli"
+type = "forbidden"
+source_modules = [
+    "archengine.core",
+    "archengine.simulation",
+    "archengine.geometry",
+    "archengine.render",
+    "archengine.audio",
+    "archengine.pipeline",
+]
+forbidden_modules = ["archengine.scenes", "archengine.cli"]

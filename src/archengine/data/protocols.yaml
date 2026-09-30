@@ -1,0 +1,35 @@
+schema_version: 1
+
+# Fuente de verdad de parametros operativos (PDR §4.3, OQ-11). Tiempos en microsegundos enteros.
+disk_hdd:
+  rpm: 7200
+  avg_seek_us: 8500
+  avg_rotation_us: 4166
+  seq_throughput_mb_s: 150
+  tracks: 2000
+  seek_track_to_track_us: 800
+  seek_max_us: 16000
+  transfer_us_per_page: 27
+  source: "Seagate Enterprise HDD 7200 RPM Datasheets & Architecture Specs"
+
+lsm:
+  memtable_bytes: 67108864   # 64 MiB (RocksDB write_buffer_size)
+  sstable_bytes: 67108864    # 64 MiB
+  l0_compaction_trigger: 4   # 4 SSTables disparan compactacion L0->L1
+  wal_sync: batch            # Cassandra commitlog_sync: periodic
+  source: "RocksDB write_buffer_size default (64MB); Cassandra commitlog_sync: periodic; Petrov 'Database Internals' Cap. 7"
+
+btree:
+  page_bytes: 4096           # 4 KB
+  fanout: 256                # 256 claves por nodo interior
+  buffer_pool_pages: 1024    # 4 MB en RAM para inducir desalojo y seeks aleatorios
+  source: "PostgreSQL/LMDB default leaf page size (4KB); Petrov 'Database Internals' Cap. 2-3"
+
+raft:
+  election_timeout_ms: [150, 300]
+  heartbeat_interval_ms: 50
+
+transport:
+  ttl_hops: 16
+  frame_bytes: 1500
+  timeout_ms: 1000
